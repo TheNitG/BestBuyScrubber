@@ -1,10 +1,13 @@
 # Import necessary packages
 import requests
 from bs4 import BeautifulSoup
+import tkinter as tk
 
 
 # Function to find the products and their respective prices from the search term
-def find_products(search_term):
+def find_products_from_term(search_term):
+    # Turn spaces into + to work in URL
+    search_term = str(search_term).replace(' ', '+')
     # Declare the URL from the input
     url = 'https://www.bestbuy.com/site/searchpage.jsp?st=' + search_term + '&_dyncharset=UTF-8&_dynSessConf=&id=pcat' \
         '17071&type=page&sc=Global&cp=1&nrp=&sp=&qp=&list=n&af=true&iht=y&usc=All+Categories&ks=960&keys=keys '
@@ -32,12 +35,42 @@ def find_products(search_term):
         price = str(price)
         price = "$" + price[price.find("-->") + 3:].strip("</span></div>")
         cleaned_prices.append(price)
-    # Display the product names and their respective prices
-    for x in range(len(cleaned_names)):
-        print(cleaned_names[x] + ":\n" + cleaned_prices[x])
+    # Some sites contain miscellaneous products at the top, so we remove them here
+    cleaned_prices = cleaned_prices[len(cleaned_prices) - len(cleaned_names):]
+    # Return the names and prices as a tuple
+    return cleaned_names, cleaned_prices
 
 
-# Ask for the item to be queried
-product = input('What product? ')
-# Run the function to find the products and their respective prices
-find_products(product)
+# Method to display the product names and their respective prices in the window
+def find_products():
+    # Get the names and prices
+    n, p = find_products_from_term(entry.get())
+    # Get the length of the labels array
+    length = len(labels)
+    # Use the length to go through and remove all labels from the array and window
+    for x in range(length):
+        labels.pop().destroy()
+    # Go through the new product names and their respective prices and display them on the window
+    for x in range(len(n)):
+        name_label = tk.Label(text=n[x])
+        price_label = tk.Label(text=p[x])
+        name_label.pack()
+        price_label.pack()
+        labels.append(name_label)
+        labels.append(price_label)
+
+
+# Create the window
+window = tk.Tk()
+# Add a label that says Product
+tk.Label(text='Product').pack()
+# Add a text box to type your search keyword(s)
+entry = tk.Entry()
+entry.pack()
+# Create array to contain all product name and price labels
+labels = []
+# Create button to submit search
+submit = tk.Button(text='Search', command=find_products)
+submit.pack()
+# Run the window
+window.mainloop()
